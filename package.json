@@ -1,0 +1,30 @@
+{
+  "name": "izaya",
+  "version": "0.0.1",
+  "description": "A logging utility that gets up and going fast, so you can always know what's going on with little effort",
+  "main": "izaya.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mpeterdev/izaya.git"
+  },
+  "keywords": [
+    "log",
+    "mongodb"
+  ],
+  "author": "Michael Peter",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mpeterdev/izaya/issues"
+  },
+  "homepage": "https://github.com/mpeterdev/izaya#readme",
+  "dependencies": {
+    "mongodb": "^2.2.25",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0"
+  }
+}
