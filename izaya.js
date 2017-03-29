@@ -2,26 +2,47 @@ var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var _ = require('underscore');
 
-var collectionName;
+var logLevels = ['info', 'warn', 'error'];
+
+var dbConfigs = {};
 var mongoURL;
-var capSize;
-var capMax;
 
 exports.init = function(config){
-	assert(config.collectionName);
+	assert(config.collection);
 	assert(config.url, 'No URL provided');
 	assert(!config.cappedMax || config.cappedSize, "Must specify a cappedSize for capped collections");
-	collectionName = config.collectionName || 'logs';
-	mongoURL       = config.url;
-	capSize        = config.cappedSize;
-	capMax         = config.cappedMax;
-}
+	dbConfigs.default = {
+		collection : config.collection || 'logs',
+		capSize    : config.cappedSize,
+		capMax     : config.cappedMax
+	};
+	mongoURL = config.url;
+};
 
-exports.info  = _.partial(logAtLevel, 'info');
-exports.warn  = _.partial(logAtLevel, 'warn');
-exports.error = _.partial(logAtLevel, 'error');
+_.each(logLevels, (level) => {
+	exports[level] = _.partial(logAtLevel, null, level);
+});
 
-function logAtLevel(level, content, callback){
+exports.addCollection = function(namespace, additionalCollection, config){
+	assert(additionalCollection, 'Collection name must be provided');
+	assert(!exports[namespace], 'Namespace is already in use');
+	assert.notEqual('default', namespace, 'Cannot use "default" namespace as it would override base config options');
+	exports[namespace] = _.reduce(logLevels, (memo, level) => {
+		memo[level] = _.partial(logAtLevel, namespace, level);
+	}, {});
+
+	dbConfigs[namespace] = _.defaults(config, {collection: additionalCollection}, dbConfigs.default);
+
+};
+
+/**
+ * Execute creation of log(s) with the provided log level
+ * @param  {String}        level    Log level
+ * @param  {Array|Object}  content  Object(s) with content for logs
+ * @param  {Function}      callback
+ * @return void
+ */
+function logAtLevel(logSet, level, content, callback){
 	// convert single doc to an array so that we can always use insertMany
 	if (!_.isArray(content)){
 		content = [content];
@@ -36,9 +57,9 @@ function logAtLevel(level, content, callback){
 			level   : level,
 			content : obj
 		};
-	})
+	});
 
-	connectAndFetch((err, db, logCollection) => {
+	connectAndFetch(logSet, (err, db, logCollection) => {
 		if (err){
 			callback(err);
 			return;
@@ -57,16 +78,22 @@ function logAtLevel(level, content, callback){
 *                             db is passed back so that it can be closed later
 * @return void
 */
-function connectAndFetch(callback){
+function connectAndFetch(logSet, callback){
 	MongoClient.connect(mongoURL, function(err, db) {
 		if (err){
 			callback(err);
 			return;
 		}
-		var collection = db.createCollection(collectionName, {
-			capped : capSize ? true : false,
-			size : capSize,
-			max : capMax
+
+		var fetchConfig = logSet ? dbConfigs[logSet] : dbConfigs.default;
+
+		// capped collections require an explicit createCollection call, so we always
+		// send a creation request, and it will simply fetch the collection if it
+		// already exists
+		var collection = db.createCollection(fetchConfig.collection, {
+			capped : fetchConfig.capSize ? true : false,
+			size   : fetchConfig.capSize,
+			max    : fetchConfig.capMax
 		}, (err, collection) => {
 			if (err){
 				callback(err);
@@ -75,6 +102,5 @@ function connectAndFetch(callback){
 			callback(null, db, collection);
 
 		});
-		// callback(null, db, collection);
 	});
 }

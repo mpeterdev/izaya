@@ -1,4 +1,5 @@
 var assert = require('assert');
+var should = require('should');
 var izaya = require('../izaya.js');
 
 var collection = 'test';
@@ -13,10 +14,15 @@ describe('Array', function() {
 
 describe('Izaya', ()=>{
 	describe('#info()', ()=>{
+    it('should be a function', () => {
+      // should(izaya.info).be.a.Function();
+      assert(izaya.info);
+      izaya.info.should.be.a.Function();
+    });
 		it('should write an object with logLevel of info', (done)=>{
 			izaya.init({
-				collectionName : 'test',
-				url : 'mongodb://192.168.1.21:27017/izaya'
+				collection : 'test',
+				url : 'mongodb://127.0.0.1:27017/izaya'
 			});
 
 			izaya.info({message : 'test info insert'}, function(err, result){
@@ -28,10 +34,10 @@ describe('Izaya', ()=>{
 		});
 	});
 	describe('#warn()', ()=>{
-		it('should write an object with logLevel of info', (done)=>{
+		it('should write an object with logLevel of warn', (done)=>{
 			izaya.init({
-				collectionName : 'test',
-				url : 'mongodb://192.168.1.21:27017/izaya'
+				collection : 'test',
+				url : 'mongodb://127.0.0.1:27017/izaya'
 			});
 
 			izaya.warn({message : 'test warn insert'}, function(err, result){
@@ -43,10 +49,10 @@ describe('Izaya', ()=>{
 		});
 	});
 	describe('#error()', ()=>{
-		it('should write an object with logLevel of info', (done)=>{
+		it('should write an object with logLevel of error', (done)=>{
 			izaya.init({
-				collectionName : 'test',
-				url : 'mongodb://192.168.1.21:27017/izaya'
+				collection : 'test',
+				url : 'mongodb://127.0.0.1:27017/izaya'
 			});
 
 			izaya.error({message : 'test error insert'}, function(err, result){
