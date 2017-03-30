@@ -2,11 +2,21 @@ var MongoClient = require('mongodb').MongoClient;
 var assert = require('assert');
 var _ = require('underscore');
 
-var logLevels = ['info', 'warn', 'error'];
-
 var dbConfigs = {};
 var mongoURL;
 
+var logLevels = ['info', 'warn', 'error'];
+
+_.each(logLevels, (level) => {
+	exports[level] = _.partial(logAtLevel, null, level);
+});
+
+/**
+ * Initialize this library to log to a default collection
+ * @param  {Object} config Properties of the mongo collection to use for default
+ *                         log functions
+ * @return void
+ */
 exports.init = function(config){
 	assert(config.collection);
 	assert(config.url, 'No URL provided');
@@ -19,20 +29,34 @@ exports.init = function(config){
 	mongoURL = config.url;
 };
 
-_.each(logLevels, (level) => {
-	exports[level] = _.partial(logAtLevel, null, level);
-});
-
-exports.addCollection = function(namespace, additionalCollection, config){
+/**
+ * Add a another namespace for logging to an additional collection
+ * @param {String} namespace            extension of module name to place logging
+ *                                      functions under
+ * @param {String} additionalCollection name of new collection in database
+ * @param {Object} config               configuration for collection
+ * @param {Boolean} inherit             whether to inherit config properties
+ *                                      from default
+ * @return void
+ */
+exports.addCollection = function(namespace, additionalCollection, config, inherit){
 	assert(additionalCollection, 'Collection name must be provided');
 	assert(!exports[namespace], 'Namespace is already in use');
 	assert.notEqual('default', namespace, 'Cannot use "default" namespace as it would override base config options');
+
+	// build log level functions object and export
 	exports[namespace] = _.reduce(logLevels, (memo, level) => {
 		memo[level] = _.partial(logAtLevel, namespace, level);
+		return memo;
 	}, {});
 
-	dbConfigs[namespace] = _.defaults(config, {collection: additionalCollection}, dbConfigs.default);
+	config = config || {};
 
+	if (inherit){
+		dbConfigs[namespace] = _.defaults(config, {collection: additionalCollection}, dbConfigs.default);
+	} else {
+		dbConfigs[namespace] = _.defaults(config, {collection: additionalCollection});
+	}
 };
 
 /**
@@ -43,6 +67,16 @@ exports.addCollection = function(namespace, additionalCollection, config){
  * @return void
  */
 function logAtLevel(logSet, level, content, callback){
+	if (!_.isString(content) && !_.isObject(content) && !_.isArray(content)){
+		if (_.isFunction(callback)){
+			callback(new Error('Log must be a string, object, or array of objects'));
+		}
+		return;
+	}
+	// convert string to document object
+	if (_.isString(content)){
+		content = {message : content};
+	}
 	// convert single doc to an array so that we can always use insertMany
 	if (!_.isArray(content)){
 		content = [content];
@@ -61,13 +95,17 @@ function logAtLevel(logSet, level, content, callback){
 
 	connectAndFetch(logSet, (err, db, logCollection) => {
 		if (err){
-			callback(err);
+			if (_.isFunction(callback)){
+				callback(err);
+			}
 			return;
 		}
 
 		logCollection.insertMany(logItems, (err, result) => {
 			db.close();
-			callback(err, result);
+			if (_.isFunction(callback)){
+				callback(err, result);
+			}
 		});
 	});
 }

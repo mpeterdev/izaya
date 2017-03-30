@@ -14,7 +14,7 @@
     "log",
     "mongodb"
   ],
-  "author": "Michael Peter",
+  "author": "Michael Peter <m.peter.dev@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mpeterdev/izaya/issues"
