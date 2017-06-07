@@ -18,7 +18,6 @@ _.each(logLevels, (level) => {
  * @return void
  */
 exports.init = function(config){
-	assert(config.collection);
 	assert(config.url, 'No URL provided');
 	assert(!config.cappedMax || config.cappedSize, "Must specify a cappedSize for capped collections");
 	dbConfigs.default = {
