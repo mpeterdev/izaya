@@ -81,7 +81,7 @@ function logAtLevel(logSet, level, content, callback){
 		content = [content];
 	}
 
-	var created = new Date().toISOString();
+	var created = new Date();
 
 	// add metadata to each log
 	var logItems = _.map(content, (obj) => {

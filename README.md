@@ -29,9 +29,17 @@ Log.warn('something concerning happened');
 Log.error('something bad happened');
 ```
 
-## Functions
+<!-- ## Functions
 
 ### init
 #### parameters
 - `collection` The name for the MongoDB collection to which the default functions write
-- `capSize` Create the default collection as as a [MongoDB Capped Collection](https://docs.mongodb.com/manual/core/capped-collections/) which will not exceed this size (provided in bytes). A normal collection cannot be converted to a capped collection, and vice versa, so the collection must not already exist in the database for this parameter to have an effect
+- `capSize` Create the default collection as as a [MongoDB Capped Collection](https://docs.mongodb.com/manual/core/capped-collections/) which will not exceed this size (provided in bytes). A normal collection cannot be converted to a capped collection, and vice versa, so the collection must not already exist in the database for this parameter to have an effect -->
+
+## Changelog
+
+### 0.0.2
+- changed `created` metadata field to a true date object so it can be queried
+
+
+## This documentation is still in progress...
